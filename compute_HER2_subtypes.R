@@ -2,10 +2,11 @@
 
 # it requires "sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS" in your home directory
 # output is a dataframe with the score of each subtype, the subtype as category, and columns of each subtype vs rest to facilitate downstream analyses
-calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbols, columns are samples)
+
+calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbols/entrezIDs, columns are samples)
+                             sig = readRDS("sigs_groups_class_final.RDS"), # signature file (a list of signatures with gene symbols, entrezID and coefficients)
                              type = c("TPM", "FPKM", "microarray"), # to be specified: after ratio-based correction, if TPM/FPKM, it transforms in log2(d+1), if microarray, assumed in log scale, so first un-logged 2^d and then log2(d+1). If standardize_data = TRUE and TPM/FPKM, centering and scaling are performed using center_genes and sd_genes. If Microarray, scale() is applied with default options
                              is_list_gene_exp = FALSE, # if TRUE, it allows to apply the same median ratio procedure to a list of gene expression matrices (TPM/FPKM) independently, which are then merged at the end before standardization
-                             sig = readRDS("sigs_groups_class_final.RDS"), # signature file (a list of signatures with gene symbols, entrezID and coefficients)
                              median_genes = readRDS("median_genes.RDS"), # the file containing median levels of TPM normalized gene expression from ALTTO TPM for genes included in the signatures
                              median_rescale = TRUE, # ratio-based correction: it will rescale gene expression data so that the median of selected genes will be the same as the median of TPM normalized genes in ALTTO (inspired by PMID: 28610557)
                              standardize_data = TRUE,  # it will apply scale() on gene expression data
@@ -13,9 +14,46 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                              sd_genes = readRDS("x_sd_genes.RDS")
 ) 
 { #if (is(d, "Matrix")) { colMeans=Matrix::colMeans; colSums=Matrix::colSums; }
+  '%!in%' <- function(x,y)!('%in%'(x,y))
+  
   if(!require(dplyr)) { stop("dplyr library not installed"); }
+  if (is.list(sig) && !is.data.frame(sig))
+  { ret = sapply(sig, function(i) calc_HER2_groups(d, i, 
+                                                   type = type, 
+                                                   is_list_gene_exp = is_list_gene_exp, 
+                                                   median_rescale = median_rescale, 
+                                                   median_genes = median_genes,
+                                                   standardize_data = standardize_data,  
+                                                   center_genes = center_genes,
+                                                   sd_genes = sd_genes));
+  
+  
+  ret <- as.data.frame(ret)
+  factor_tot_max <- as.data.frame(colnames(ret)[apply(ret,1,which.max)])
+  
+  factor_tot_max <- as.data.frame(factor_tot_max)
+  colnames(factor_tot_max) <- "HER2_subtype"
+  
+  factor_tot_max$HER2_subtype <- factor(factor_tot_max$HER2_subtype, levels = c("IM", "P/Met", "Mes/S", "LUM", "ERBB2-E"))
+  
+  ret <- cbind(ret, factor_tot_max)
+  colnames(ret) <- c("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score", "HER2_subtype")
+  ret$IM_vs_rest <- case_when(ret$HER2_subtype %in% "IM" ~ "Y",
+                              ret$HER2_subtype %!in% "IM" ~ "N")
+  ret$P_Met_vs_rest <- case_when(ret$HER2_subtype %in% "P/Met" ~ "Y",
+                                 ret$HER2_subtype %!in% "P/Met" ~ "N")
+  ret$Mes_S_vs_rest <- case_when(ret$HER2_subtype %in% "Mes/S" ~ "Y",
+                                 ret$HER2_subtype %!in% "Mes/S" ~ "N")
+  ret$LUM_vs_rest <- case_when(ret$HER2_subtype %in% "LUM" ~ "Y",
+                               ret$HER2_subtype %!in% "LUM" ~ "N")
+  ret$ERBB2_E_vs_rest <- case_when(ret$HER2_subtype %in% "ERBB2-E" ~ "Y",
+                                   ret$HER2_subtype %!in% "ERBB2-E" ~ "N")
+  
+  return(ret);
+  }
+  
   if(median_rescale){
-    if(type == "TPM" | type == "FPKM" ){
+    if(type == "TPM"){
       if(is_list_gene_exp == FALSE){
         
         d_median <- colMedians(t(d), na.rm = TRUE)
@@ -91,7 +129,83 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
       } 
     }
     
-    if(type == "microarray") {
+    else if(type == "FPKM" ){
+      if(is_list_gene_exp == FALSE){
+        
+        d_median <- colMedians(t(d), na.rm = TRUE)
+        names(d_median) <- rownames(d)
+        
+        d_median <- d_median[!d_median == 0] # filter genes with median of 0
+        
+        d <- d[names(d_median), ]
+        
+        d <- d[intersect(rownames(d), names(median_genes)), ]
+        
+        # ensure that genes are filtered if present and ordered
+        median_genes_in_d <- median_genes[names(median_genes) %in% rownames(d)] # ALTTO genes in dataset
+        d_median_in_altto <- d_median[names(d_median) %in% names(median_genes_in_d)] # Dataset genes in ALTTO
+        median_genes_in_d <- median_genes_in_d[names(d_median_in_altto)]
+        d_median_in_altto <- d_median_in_altto[names(median_genes_in_d)]
+        
+        d <- d[rownames(d) %in% names(d_median_in_altto), ] # dataset genes in common
+        d <- d[names(d_median_in_altto), ]
+        
+        # compute ratio of medians
+        median_genes_RATIO <- median_genes_in_d/d_median_in_altto
+        
+        df_median <- t(mapply("*", as.data.frame(t(d)), median_genes_RATIO))
+        
+        df_median <- as.matrix(df_median)
+        
+        colnames(df_median) <- colnames(d)
+        
+        d <- log2(df_median + 1)
+        
+      }
+      
+      if(is_list_gene_exp == TRUE){
+        results <- list()
+        for(i in 1:length(d)){
+          
+          d_list <- data.matrix(d[[i]])
+          if (!is.matrix(d_list)) {
+            stop("Error: Input data is not a matrix.")
+          }
+          
+          d_median <- colMedians(t(d_list), na.rm = TRUE)
+          names(d_median) <- rownames(d_list)
+          
+          d_list <- d_list[names(d_median), ]
+          
+          d_list <- d_list[intersect(rownames(d_list), names(median_genes)), ]
+          
+          # ensure that genes are filtered if present and ordered
+          median_genes_in_d <- median_genes[names(median_genes) %in% rownames(d_list)] # ALTTO genes in dataset
+          d_median_in_altto <- d_median[names(d_median) %in% names(median_genes_in_d)] # Dataset genes in ALTTO
+          median_genes_in_d <- median_genes_in_d[names(d_median_in_altto)]
+          d_median_in_altto <- d_median_in_altto[names(median_genes_in_d)]
+          
+          d_list <- d_list[rownames(d_list) %in% names(d_median_in_altto), ] # dataset genes in common
+          d_list <- d_list[names(d_median_in_altto), ]
+          
+          # compute ratio of medians
+          median_genes_RATIO <- median_genes_in_d/d_median_in_altto
+          
+          df_median <- t(mapply("*", as.data.frame(t(d_list)), median_genes_RATIO))
+          
+          df_median <- as.matrix(df_median)
+          
+          colnames(df_median) <- colnames(d_list)
+          
+          d_list <- log2(df_median + 1)
+          results[[i]] <- d_list
+        }
+        d <- do.call(cbind, results)
+        
+      } 
+    }
+    
+    else if(type == "microarray") {
       
       d <- 2^d # inverse log transformation
       
@@ -127,7 +241,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
     }
   }
   
-  else{
+  else {
     d <- log2(d + 1)
   }
   
@@ -135,13 +249,19 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
   # }
   
   if(standardize_data) {
-    if(type == "TPM" | type == "FPKM" ){
+    if(type == "FPKM" ){
       d <- d[names(center_genes)[names(center_genes) %in% rownames(d)], ]
       d <- d[match(rownames(d), names(center_genes)[names(center_genes) %in% rownames(d)]), ]
       d = t(scale(t(d), center = center_genes[names(center_genes) %in% rownames(d)], 
                   scale = sd_genes[names(sd_genes) %in% rownames(d)]))
     }
-    else{
+    else if(type == "TPM"){
+      d <- d[names(center_genes)[names(center_genes) %in% rownames(d)], ]
+      d <- d[match(rownames(d), names(center_genes)[names(center_genes) %in% rownames(d)]), ]
+      d = t(scale(t(d), center = center_genes[names(center_genes) %in% rownames(d)], 
+                  scale = sd_genes[names(sd_genes) %in% rownames(d)]))
+    }
+    else {
       d = t(scale(t(d), center = TRUE, scale = TRUE))
     }
   }
@@ -150,9 +270,16 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
   # }
   
   if (is.list(sig) && !is.data.frame(sig))
-  { ret = sapply(sig, function(i) calcSig(d, i));
+  { ret = sapply(sig, function(i) calc_HER2_groups(d, i, 
+                                                   type = type, 
+                                                   is_list_gene_exp = is_list_gene_exp, 
+                                                   median_rescale = median_rescale, 
+                                                   median_genes = median_genes,
+                                                   standardize_data = standardize_data,  
+                                                   center_genes = center_genes,
+                                                   sd_genes = sd_genes));
   
-  if (is.matrix(ret)){
+  
     ret <- as.data.frame(ret)
     factor_tot_max <- as.data.frame(colnames(ret)[apply(ret,1,which.max)])
     
@@ -174,7 +301,6 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
     ret$ERBB2_E_vs_rest <- case_when(ret$HER2_subtype %in% "ERBB2-E" ~ "Y",
                                      ret$HER2_subtype %!in% "ERBB2-E" ~ "N")
     
-  }
   return(ret);
   }
   
@@ -203,3 +329,130 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
   
 }
 
+
+
+calcSig <- function(d, sig, dropEmpty=TRUE, balanced=FALSE, isCount=FALSE, useNB=FALSE,
+                    updateWeights=FALSE, returnW=FALSE, maxN=200)
+{ if (is(d, "Matrix")) { colMeans=Matrix::colMeans; colSums=Matrix::colSums; }
+  if (is.list(sig) && !is.data.frame(sig))
+  { ret = sapply(sig, function(i) calcSig(d, i, balanced=balanced, isCount=isCount, useNB=useNB, updateWeights=updateWeights));
+  if (dropEmpty)
+  { ret = ret[,!colSums(!is.na(ret))==0];
+  }
+  return(ret);
+  }
+  
+  s = as.character(sig[,1]);
+  s[s==""] = NA;
+  x = intersect(rownames(d), s);
+  x = x[!is.na(x)];
+  if (length(x) == 0)
+  { if (colnames(sig)[1] == "name") { other = "entrez"; } else { other = "name"; }
+    s = as.character(sig[,other]);
+    s[s==""] = NA;
+    x = intersect(rownames(d), s);
+    x = x[!is.na(x)];
+    if (length(x) == 0)
+    { warning("No gene in common");
+      return(rep(NA, ncol(d)));
+    }
+  }
+  
+  sig = sig[match(x, s),];
+  
+  if (isCount) 
+  { if (useNB)
+  { if (length(x)==1) { return(log10(1e4*d[x,]/colSums(d)+1)); }
+    w = rowSums(d[x,])>1; x = x[w]; sig = sig[w,]; 
+    if(!require(MASS)) { stop("MASS library not installed"); }
+    if (any(duplicated(colnames(d)))) { stop("No duplicated colnames"); }
+    y = cbind(as.vector(d[x,]), rep(colSums(d), each=length(x)));
+    id = factor(rep(colnames(d), each=length(x)))
+    gid = factor(rep(x, ncol(d)));
+    a = sig$coefficient;
+    Ns = colnames(d);
+    if (ncol(d)>maxN)
+    { Ns = colnames(d)[sample(1:ncol(d), ifelse(length(x)>maxN, maxN/2, maxN))];
+    su = id %in% Ns;
+    y = y[su,]; id = id[su]; gid = gid[su];
+    }
+    
+    if (all(sig$coefficient==1))
+    { fm = glm.nb.noErr(y[,1] ~ id + gid -1 + offset(log(y[,2])));
+    co = coef(fm);
+    co2 = co[grep("^id", names(co))];
+    names(co2) = sub("^id", "", names(co2))
+    co2 = co2[Ns]
+    #co2 = co2[colnames(d)]; co2[is.na(co2)] = 0; names(co2) = colnames(d);
+    if (updateWeights)
+    { a = tapply(1:nrow(y), gid, function(i) { z=y[i,];
+    coef(glm.nb.noErr(z[,1] ~ co2 + offset(log(z[,2]))))["co2"]}) 
+    }
+    } else { updateWeights=updateWeights+1; }
+    
+    for (iter in 1:updateWeights)      
+    { g2b = rep(a, length(id)/length(a))
+    fm = glm.nb.noErr(y[,1] ~ g2b*id-g2b-id-1 + gid + offset(log(y[,2])));
+    co = coef(fm);
+    co2 = co[grep("^g2b:id", names(co))]; co2[is.na(co2)] = 0;
+    names(co2) = sub("^(g2b)*:id", "", names(co2));
+    co2 = co2[Ns]; 
+    if (iter<updateWeights)
+    {  a = tapply(1:nrow(y), gid, function(i) { z=y[i,];
+    coef(glm.nb.noErr(glm.nb(z[,1] ~ co2 + offset(log(z[,2])))))["co2"]} );
+    browser();  
+    }
+    }
+    
+    if (ncol(d)>maxN)
+    { co = coef(fm);
+    cog = co[grep("^(gid|g2b:id)",names(co))]
+    names(cog) = sub("^(gid|g2b:id)", "", names(cog))
+    cog = cog[x]; cog[is.na(cog)] = 0; names(cog) = x;
+    #cog = cog+co["(Intercept)"];
+    N = colSums(d);
+    if (!is.null(fm$theta)) { fam=negative.binomial(fm$theta); }
+    else { fam=poisson; }
+    if (all(a==1))
+    { co2 = sapply(1:ncol(d), function(i)
+    { if (sum(d[x,i])==0) { return(-Inf); }
+      coef(suppressWarnings(glm(d[x,i] ~ offset(log(N[i]) + cog), family=fam)))
+    } );
+    } else
+    { co2 = sapply(1:ncol(d), function(i)
+    { if (sum(d[x,i])==0) { return(-Inf); }
+      coef(suppressWarnings(glm(d[x,i] ~ a + offset(log(N[i]) + cog), family=fam)))["a"]
+    } );
+    }
+    names(co2) = colnames(d)
+    }
+    
+    if (returnW) { names(a) = x; return(list(sig=co2, weights=a)); }
+    return(co2)
+  }
+    fCalc = function(d, x, coef)
+    { r = colSums(d[x,,drop=FALSE]*coef, na.rm=TRUE)/colSums(d, na.rm=TRUE);
+    sign(r)*log10(1+abs(r)*100);
+    }
+  } else { fCalc = function(d, x, coef) { colMeans(d[x,,drop=FALSE]*coef); } } # original, weighted mean
+  # } else { fCalc = function(d, x, coef) { colSums(d[x,,drop=FALSE]*coef); } }
+  # } else { fCalc = function(d, x, coef) { colSums(d[x,,drop=FALSE]*coef, na.rm=TRUE)/sum(abs(coef)); } }
+  
+  if (balanced && any(!(w <- (sig[,"coefficient"] > 0))))
+  { #val1 = d[x,w,drop=FALSE] * sig[w,"coefficient"];
+    #val1 = colMeans(val, na.rm=TRUE);
+    val1 = fCalc(d, x[w], sig[w,"coefficient"]);
+    #val2 = d[x,!w,drop=FALSE] * sig[!w,"coefficient"];
+    #val2 = colMeans(val, na.rm=TRUE);
+    val2 = fCalc(d, x[!w], sig[!w,"coefficient"]);
+    val = (val1+val2)/2;
+  }
+  else
+  { #val = d[x,,drop=FALSE] * sig[,"coefficient"];
+    #val = colMeans(val, na.rm=TRUE);
+    val = fCalc(d, x, sig[,"coefficient"]);
+  }
+  return(val);
+}
+
+  
