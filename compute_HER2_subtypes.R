@@ -2,7 +2,6 @@
 
 # it requires "sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS" in your home directory
 # output is a dataframe with the score of each subtype, the subtype as category, and columns of each subtype vs rest to facilitate downstream analyses
-
 calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbols/entrezIDs, columns are samples)
                              sig = readRDS("sigs_groups_class_final.RDS"), # signature file (a list of signatures with gene symbols, entrezID and coefficients)
                              type = c("TPM", "FPKM", "microarray"), # to be specified: after ratio-based correction, if TPM/FPKM, it transforms in log2(d+1), if microarray, assumed in log scale, so first un-logged 2^d and then log2(d+1). If standardize_data = TRUE and TPM/FPKM, centering and scaling are performed using center_genes and sd_genes. If Microarray, scale() is applied with default options
@@ -245,9 +244,6 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
     d <- log2(d + 1)
   }
   
-  #     return(d)
-  # }
-  
   if(standardize_data) {
     if(type == "FPKM" ){
       d <- d[names(center_genes)[names(center_genes) %in% rownames(d)], ]
@@ -265,9 +261,6 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
       d = t(scale(t(d), center = TRUE, scale = TRUE))
     }
   }
-  
-  #   return(d)
-  # }
   
   if (is.list(sig) && !is.data.frame(sig))
   { ret = sapply(sig, function(i) calc_HER2_groups(d, i, 
@@ -329,130 +322,5 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
   
 }
 
-
-
-calcSig <- function(d, sig, dropEmpty=TRUE, balanced=FALSE, isCount=FALSE, useNB=FALSE,
-                    updateWeights=FALSE, returnW=FALSE, maxN=200)
-{ if (is(d, "Matrix")) { colMeans=Matrix::colMeans; colSums=Matrix::colSums; }
-  if (is.list(sig) && !is.data.frame(sig))
-  { ret = sapply(sig, function(i) calcSig(d, i, balanced=balanced, isCount=isCount, useNB=useNB, updateWeights=updateWeights));
-  if (dropEmpty)
-  { ret = ret[,!colSums(!is.na(ret))==0];
-  }
-  return(ret);
-  }
-  
-  s = as.character(sig[,1]);
-  s[s==""] = NA;
-  x = intersect(rownames(d), s);
-  x = x[!is.na(x)];
-  if (length(x) == 0)
-  { if (colnames(sig)[1] == "name") { other = "entrez"; } else { other = "name"; }
-    s = as.character(sig[,other]);
-    s[s==""] = NA;
-    x = intersect(rownames(d), s);
-    x = x[!is.na(x)];
-    if (length(x) == 0)
-    { warning("No gene in common");
-      return(rep(NA, ncol(d)));
-    }
-  }
-  
-  sig = sig[match(x, s),];
-  
-  if (isCount) 
-  { if (useNB)
-  { if (length(x)==1) { return(log10(1e4*d[x,]/colSums(d)+1)); }
-    w = rowSums(d[x,])>1; x = x[w]; sig = sig[w,]; 
-    if(!require(MASS)) { stop("MASS library not installed"); }
-    if (any(duplicated(colnames(d)))) { stop("No duplicated colnames"); }
-    y = cbind(as.vector(d[x,]), rep(colSums(d), each=length(x)));
-    id = factor(rep(colnames(d), each=length(x)))
-    gid = factor(rep(x, ncol(d)));
-    a = sig$coefficient;
-    Ns = colnames(d);
-    if (ncol(d)>maxN)
-    { Ns = colnames(d)[sample(1:ncol(d), ifelse(length(x)>maxN, maxN/2, maxN))];
-    su = id %in% Ns;
-    y = y[su,]; id = id[su]; gid = gid[su];
-    }
-    
-    if (all(sig$coefficient==1))
-    { fm = glm.nb.noErr(y[,1] ~ id + gid -1 + offset(log(y[,2])));
-    co = coef(fm);
-    co2 = co[grep("^id", names(co))];
-    names(co2) = sub("^id", "", names(co2))
-    co2 = co2[Ns]
-    #co2 = co2[colnames(d)]; co2[is.na(co2)] = 0; names(co2) = colnames(d);
-    if (updateWeights)
-    { a = tapply(1:nrow(y), gid, function(i) { z=y[i,];
-    coef(glm.nb.noErr(z[,1] ~ co2 + offset(log(z[,2]))))["co2"]}) 
-    }
-    } else { updateWeights=updateWeights+1; }
-    
-    for (iter in 1:updateWeights)      
-    { g2b = rep(a, length(id)/length(a))
-    fm = glm.nb.noErr(y[,1] ~ g2b*id-g2b-id-1 + gid + offset(log(y[,2])));
-    co = coef(fm);
-    co2 = co[grep("^g2b:id", names(co))]; co2[is.na(co2)] = 0;
-    names(co2) = sub("^(g2b)*:id", "", names(co2));
-    co2 = co2[Ns]; 
-    if (iter<updateWeights)
-    {  a = tapply(1:nrow(y), gid, function(i) { z=y[i,];
-    coef(glm.nb.noErr(glm.nb(z[,1] ~ co2 + offset(log(z[,2])))))["co2"]} );
-    browser();  
-    }
-    }
-    
-    if (ncol(d)>maxN)
-    { co = coef(fm);
-    cog = co[grep("^(gid|g2b:id)",names(co))]
-    names(cog) = sub("^(gid|g2b:id)", "", names(cog))
-    cog = cog[x]; cog[is.na(cog)] = 0; names(cog) = x;
-    #cog = cog+co["(Intercept)"];
-    N = colSums(d);
-    if (!is.null(fm$theta)) { fam=negative.binomial(fm$theta); }
-    else { fam=poisson; }
-    if (all(a==1))
-    { co2 = sapply(1:ncol(d), function(i)
-    { if (sum(d[x,i])==0) { return(-Inf); }
-      coef(suppressWarnings(glm(d[x,i] ~ offset(log(N[i]) + cog), family=fam)))
-    } );
-    } else
-    { co2 = sapply(1:ncol(d), function(i)
-    { if (sum(d[x,i])==0) { return(-Inf); }
-      coef(suppressWarnings(glm(d[x,i] ~ a + offset(log(N[i]) + cog), family=fam)))["a"]
-    } );
-    }
-    names(co2) = colnames(d)
-    }
-    
-    if (returnW) { names(a) = x; return(list(sig=co2, weights=a)); }
-    return(co2)
-  }
-    fCalc = function(d, x, coef)
-    { r = colSums(d[x,,drop=FALSE]*coef, na.rm=TRUE)/colSums(d, na.rm=TRUE);
-    sign(r)*log10(1+abs(r)*100);
-    }
-  } else { fCalc = function(d, x, coef) { colMeans(d[x,,drop=FALSE]*coef); } } # original, weighted mean
-  # } else { fCalc = function(d, x, coef) { colSums(d[x,,drop=FALSE]*coef); } }
-  # } else { fCalc = function(d, x, coef) { colSums(d[x,,drop=FALSE]*coef, na.rm=TRUE)/sum(abs(coef)); } }
-  
-  if (balanced && any(!(w <- (sig[,"coefficient"] > 0))))
-  { #val1 = d[x,w,drop=FALSE] * sig[w,"coefficient"];
-    #val1 = colMeans(val, na.rm=TRUE);
-    val1 = fCalc(d, x[w], sig[w,"coefficient"]);
-    #val2 = d[x,!w,drop=FALSE] * sig[!w,"coefficient"];
-    #val2 = colMeans(val, na.rm=TRUE);
-    val2 = fCalc(d, x[!w], sig[!w,"coefficient"]);
-    val = (val1+val2)/2;
-  }
-  else
-  { #val = d[x,,drop=FALSE] * sig[,"coefficient"];
-    #val = colMeans(val, na.rm=TRUE);
-    val = fCalc(d, x, sig[,"coefficient"]);
-  }
-  return(val);
-}
 
   
