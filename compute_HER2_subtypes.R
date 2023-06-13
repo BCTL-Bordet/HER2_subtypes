@@ -10,8 +10,9 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                              median_rescale = TRUE, # ratio-based correction: it will rescale gene expression data so that the median of selected genes will be the same as the median of TPM normalized genes in ALTTO (inspired by PMID: 28610557)
                              standardize_data = TRUE,  # it will apply scale() on gene expression data
                              center_genes = readRDS("x_mean_genes.RDS"),
-                             sd_genes = readRDS("x_sd_genes.RDS")
-) 
+                             sd_genes = readRDS("x_sd_genes.RDS"),
+                             fpkm_to_tpm = TRUE # it converts FPKM to TPM if type = "FPKM"
+                            ) 
 { #if (is(d, "Matrix")) { colMeans=Matrix::colMeans; colSums=Matrix::colSums; }
   '%!in%' <- function(x,y)!('%in%'(x,y))
   
@@ -24,7 +25,8 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                                                    median_genes = median_genes,
                                                    standardize_data = standardize_data,  
                                                    center_genes = center_genes,
-                                                   sd_genes = sd_genes));
+                                                   sd_genes = sd_genes, 
+                                                   fpkm_to_tpm = fpkm_to_tpm));
   
   
   ret <- as.data.frame(ret)
@@ -129,7 +131,20 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
     }
     
     else if(type == "FPKM" ){
+      
+      if(fpkm_to_tpm){
+      fpkmToTpm <- function(fpkm)
+      {
+        (fpkm / sum(fpkm)) * 10^6
+      }
+      
+      fpkmToTpm_matrix <- function(fpkm_matrix) {
+        fpkm_matrix_new <- apply(fpkm_matrix, 2, fpkmToTpm)  
+      }
+      
       if(is_list_gene_exp == FALSE){
+        
+        d <- fpkmToTpm_matrix(d)
         
         d_median <- colMedians(t(d), na.rm = TRUE)
         names(d_median) <- rownames(d)
@@ -165,6 +180,8 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
       if(is_list_gene_exp == TRUE){
         results <- list()
         for(i in 1:length(d)){
+         
+           d[[i]] <- fpkmToTpm_matrix(d[[i]])
           
           d_list <- data.matrix(d[[i]])
           if (!is.matrix(d_list)) {
@@ -202,8 +219,83 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
         d <- do.call(cbind, results)
         
       } 
+      }
+      else {
+        if(is_list_gene_exp == FALSE){
+          
+          d_median <- colMedians(t(d), na.rm = TRUE)
+          names(d_median) <- rownames(d)
+          
+          d_median <- d_median[!d_median == 0] # filter genes with median of 0
+          
+          d <- d[names(d_median), ]
+          
+          d <- d[intersect(rownames(d), names(median_genes)), ]
+          
+          # ensure that genes are filtered if present and ordered
+          median_genes_in_d <- median_genes[names(median_genes) %in% rownames(d)] # ALTTO genes in dataset
+          d_median_in_altto <- d_median[names(d_median) %in% names(median_genes_in_d)] # Dataset genes in ALTTO
+          median_genes_in_d <- median_genes_in_d[names(d_median_in_altto)]
+          d_median_in_altto <- d_median_in_altto[names(median_genes_in_d)]
+          
+          d <- d[rownames(d) %in% names(d_median_in_altto), ] # dataset genes in common
+          d <- d[names(d_median_in_altto), ]
+          
+          # compute ratio of medians
+          median_genes_RATIO <- median_genes_in_d/d_median_in_altto
+          
+          df_median <- t(mapply("*", as.data.frame(t(d)), median_genes_RATIO))
+          
+          df_median <- as.matrix(df_median)
+          
+          colnames(df_median) <- colnames(d)
+          
+          d <- log2(df_median + 1)
+          
+        }
+        
+        if(is_list_gene_exp == TRUE){
+          results <- list()
+          for(i in 1:length(d)){
+            
+            d_list <- data.matrix(d[[i]])
+            if (!is.matrix(d_list)) {
+              stop("Error: Input data is not a matrix.")
+            }
+            
+            d_median <- colMedians(t(d_list), na.rm = TRUE)
+            names(d_median) <- rownames(d_list)
+            
+            d_list <- d_list[names(d_median), ]
+            
+            d_list <- d_list[intersect(rownames(d_list), names(median_genes)), ]
+            
+            # ensure that genes are filtered if present and ordered
+            median_genes_in_d <- median_genes[names(median_genes) %in% rownames(d_list)] # ALTTO genes in dataset
+            d_median_in_altto <- d_median[names(d_median) %in% names(median_genes_in_d)] # Dataset genes in ALTTO
+            median_genes_in_d <- median_genes_in_d[names(d_median_in_altto)]
+            d_median_in_altto <- d_median_in_altto[names(median_genes_in_d)]
+            
+            d_list <- d_list[rownames(d_list) %in% names(d_median_in_altto), ] # dataset genes in common
+            d_list <- d_list[names(d_median_in_altto), ]
+            
+            # compute ratio of medians
+            median_genes_RATIO <- median_genes_in_d/d_median_in_altto
+            
+            df_median <- t(mapply("*", as.data.frame(t(d_list)), median_genes_RATIO))
+            
+            df_median <- as.matrix(df_median)
+            
+            colnames(df_median) <- colnames(d_list)
+            
+            d_list <- log2(df_median + 1)
+            results[[i]] <- d_list
+          }
+          d <- do.call(cbind, results)
+          
+        } 
+      }
     }
-    
     else if(type == "microarray") {
       
       d <- 2^d # inverse log transformation
@@ -322,5 +414,3 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
   
 }
 
-
-  
