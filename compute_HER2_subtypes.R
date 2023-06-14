@@ -13,7 +13,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                              is_list_gene_exp = FALSE, # if TRUE, it allows to apply the same median ratio procedure to a list of gene expression matrices (TPM/FPKM) independently, which are then merged at the end before standardization
                              median_genes = readRDS("median_genes.RDS"), # the file containing median levels of TPM normalized gene expression from ALTTO TPM for genes included in the signatures
                              median_rescale = TRUE, # ratio-based correction: it will rescale gene expression data so that the median of selected genes will be the same as the median of TPM normalized genes in ALTTO (inspired by PMID: 28610557)
-                             standardize_data = TRUE,  # it will apply scale() on gene expression data
+                             standardize_data = TRUE,  # it will apply scale() on gene expression data, using scale(...,center=center_genes,scale=sd_genes) if TPM/FPKM, or scale(...,center=TRUE,scale=TRUE) if microarray
                              center_genes = readRDS("x_mean_genes.RDS"),
                              sd_genes = readRDS("x_sd_genes.RDS"),
                              fpkm_to_tpm = TRUE # it converts FPKM to TPM if type = "FPKM"
