@@ -246,7 +246,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
         
       } 
       }
-      else {
+      else { # option to not transform FPKM to TPM
         if(is_list_gene_exp == FALSE){
           
           d_median <- colMedians(t(d), na.rm = TRUE)
