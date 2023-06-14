@@ -13,7 +13,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                              is_list_gene_exp = FALSE, # if TRUE, it allows to apply the same median ratio procedure to a list of gene expression matrices (TPM/FPKM) independently, which are then merged at the end before standardization
                              median_genes = readRDS("median_genes.RDS"), # the file containing median levels of TPM normalized gene expression from ALTTO TPM for genes included in the signatures
                              median_rescale = TRUE, # ratio-based correction: it will rescale gene expression data so that the median of selected genes will be the same as the median of TPM normalized genes in ALTTO (inspired by PMID: 28610557)
-                             standardize_data = TRUE,  # it will apply scale() on gene expression data, using scale(...,center=center_genes,scale=sd_genes) if TPM/FPKM, or scale(...,center=TRUE,scale=TRUE) if microarray
+                             standardize_data_type = TRUE,  # if TRUE, it will apply scale() on gene expression data based on type, using scale(...,center=center_genes,scale=sd_genes) if TPM/FPKM, or scale(...,center=TRUE,scale=TRUE) if microarray. If FALSE, it will apply scale(...,center=TRUE,scale=TRUE) regardless
                              center_genes = readRDS("x_mean_genes.RDS"),
                              sd_genes = readRDS("x_sd_genes.RDS"),
                              fpkm_to_tpm = TRUE # it converts FPKM to TPM if type = "FPKM"
@@ -28,7 +28,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                                                    is_list_gene_exp = is_list_gene_exp, 
                                                    median_rescale = median_rescale, 
                                                    median_genes = median_genes,
-                                                   standardize_data = standardize_data,  
+                                                   standardize_data_type = standardize_data_type,  
                                                    center_genes = center_genes,
                                                    sd_genes = sd_genes, 
                                                    fpkm_to_tpm = fpkm_to_tpm));
@@ -329,6 +329,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
           
           d <- do.call(cbind, results)
           
+          
         } 
       }
     }
@@ -420,11 +421,12 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
     }
   }
   }
+  
   else {
     d <- log2(d + 1)
   }
   
-  if(standardize_data) {
+  if(standardize_data_type) {
     if(type == "FPKM" ){
       d <- d[names(center_genes)[names(center_genes) %in% rownames(d)], ]
       d <- d[match(rownames(d), names(center_genes)[names(center_genes) %in% rownames(d)]), ]
@@ -437,11 +439,14 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
       d = t(scale(t(d), center = center_genes[names(center_genes) %in% rownames(d)], 
                   scale = sd_genes[names(sd_genes) %in% rownames(d)]))
     }
-    else {
+    else if(type == "microarray"){
       d = t(scale(t(d), center = TRUE, scale = TRUE))
     }
   }
-
+  else {
+    d = t(scale(t(d), center = TRUE, scale = TRUE))
+  }
+  
   s = as.character(sig[,1]);
   s[s==""] = NA;
   x = intersect(rownames(d), s);
