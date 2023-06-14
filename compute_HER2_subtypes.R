@@ -419,7 +419,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
         d <- do.call(cbind, results)
     }
   }
-  
+  }
   else {
     d <- log2(d + 1)
   }
@@ -464,6 +464,6 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
 
   val = fCalc(d, x, sig[,"coefficient"]);
   return(val)
-  }
+  
 }
 
