@@ -1,4 +1,9 @@
-## script to compute HER2-positive breast cancer subtypes
+# color palette
+col_HER2_subtypes <- c("IM" = "#db6d00",         
+                       "P/Met" = "#920000",
+                       "Mes/S" = "#009292",
+                       "LUM" = "#006ddb",
+                       "ERBB2-E" = "#ff6db6")
 
 # it requires "sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS" in your home directory
 # output is a dataframe with the score of each subtype, the subtype as category, and columns of each subtype vs rest to facilitate downstream analyses
@@ -12,7 +17,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                              center_genes = readRDS("x_mean_genes.RDS"),
                              sd_genes = readRDS("x_sd_genes.RDS"),
                              fpkm_to_tpm = TRUE # it converts FPKM to TPM if type = "FPKM"
-                            ) 
+                             ) 
 { #if (is(d, "Matrix")) { colMeans=Matrix::colMeans; colSums=Matrix::colSums; }
   '%!in%' <- function(x,y)!('%in%'(x,y))
   
@@ -125,6 +130,17 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
           d_list <- log2(df_median + 1)
           results[[i]] <- d_list
         }
+        
+        # if matrices have different number of rows
+        common_genes <- Reduce(intersect, lapply(results, rownames))
+        # Genes not present in some of the gene expression matrices are filtered out
+        filter_rows <- function(expression_matrix, common_genes) {
+          expression_matrix <- expression_matrix[common_genes, , drop = FALSE]
+          return(expression_matrix)
+        }
+        # Apply the function to each gene expression matrix
+        results <- lapply(results, filter_rows, common_genes = common_genes)
+        
         d <- do.call(cbind, results)
         
       } 
@@ -216,6 +232,16 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
           d_list <- log2(df_median + 1)
           results[[i]] <- d_list
         }
+        # if matrices have different number of rows
+        common_genes <- Reduce(intersect, lapply(results, rownames))
+        # Genes not present in some of the gene expression matrices are filtered out
+        filter_rows <- function(expression_matrix, common_genes) {
+          expression_matrix <- expression_matrix[common_genes, , drop = FALSE]
+          return(expression_matrix)
+        }
+        # Apply the function to each gene expression matrix
+        results <- lapply(results, filter_rows, common_genes = common_genes)
+        
         d <- do.call(cbind, results)
         
       } 
@@ -291,13 +317,23 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
             d_list <- log2(df_median + 1)
             results[[i]] <- d_list
           }
+          # if matrices have different number of rows
+          common_genes <- Reduce(intersect, lapply(results, rownames))
+          # Genes not present in some of the gene expression matrices are filtered out
+          filter_rows <- function(expression_matrix, common_genes) {
+            expression_matrix <- expression_matrix[common_genes, , drop = FALSE]
+            return(expression_matrix)
+          }
+          # Apply the function to each gene expression matrix
+          results <- lapply(results, filter_rows, common_genes = common_genes)
+          
           d <- do.call(cbind, results)
           
         } 
       }
     }
     else if(type == "microarray") {
-      
+      if(is_list_gene_exp == FALSE){
       d <- 2^d # inverse log transformation
       
       d_median <- colMedians(t(d), na.rm = TRUE)
@@ -328,7 +364,59 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
       colnames(df_median) <- colnames(d)
       
       d <- log2(df_median + 1)
-      
+      }
+      if(is_list_gene_exp == TRUE){
+        results <- list()
+        for(i in 1:length(d)){
+          
+          d_list <- data.matrix(d[[i]])
+          if (!is.matrix(d_list)) {
+            stop("Error: Input data is not a matrix.")
+          }
+          d_list <- 2^d_list # inverse log transformation
+          
+          d_median <- colMedians(t(d_list), na.rm = TRUE)
+          names(d_median) <- rownames(d_list)
+          
+          d_median <- d_median[!d_median == 0] # filter genes with median of 0
+          
+          d_list <- d_list[names(d_median), ]
+          
+          d_list <- d_list[intersect(rownames(d_list), names(median_genes)), ]
+          
+          # ensure that genes are filtered if present and ordered
+          median_genes_in_d <- median_genes[names(median_genes) %in% rownames(d_list)] # ALTTO genes in dataset
+          d_median_in_altto <- d_median[names(d_median) %in% names(median_genes_in_d)] # Dataset genes in ALTTO
+          median_genes_in_d <- median_genes_in_d[names(d_median_in_altto)]
+          d_median_in_altto <- d_median_in_altto[names(median_genes_in_d)]
+          
+          d_list <- d_list[rownames(d_list) %in% names(d_median_in_altto), ] # dataset genes in common
+          d_list <- d_list[names(d_median_in_altto), ]
+          
+          # compute ratio of medians
+          median_genes_RATIO <- median_genes_in_d/d_median_in_altto
+          
+          df_median <- t(mapply("*", as.data.frame(t(d_list)), median_genes_RATIO))
+          
+          df_median <- as.matrix(df_median)
+          
+          colnames(df_median) <- colnames(d_list)
+          
+          d_list <- log2(df_median + 1)
+          
+          results[[i]] <- d_list
+        }
+        # if matrices have different number of rows
+        common_genes <- Reduce(intersect, lapply(results, rownames))
+        # Genes not present in some of the gene expression matrices are filtered out
+        filter_rows <- function(expression_matrix, common_genes) {
+          expression_matrix <- expression_matrix[common_genes, , drop = FALSE]
+          return(expression_matrix)
+        }
+        # Apply the function to each gene expression matrix
+        results <- lapply(results, filter_rows, common_genes = common_genes)
+        
+        d <- do.call(cbind, results)
     }
   }
   
@@ -353,42 +441,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
       d = t(scale(t(d), center = TRUE, scale = TRUE))
     }
   }
-  
-  if (is.list(sig) && !is.data.frame(sig))
-  { ret = sapply(sig, function(i) calc_HER2_groups(d, i, 
-                                                   type = type, 
-                                                   is_list_gene_exp = is_list_gene_exp, 
-                                                   median_rescale = median_rescale, 
-                                                   median_genes = median_genes,
-                                                   standardize_data = standardize_data,  
-                                                   center_genes = center_genes,
-                                                   sd_genes = sd_genes));
-  
-  
-    ret <- as.data.frame(ret)
-    factor_tot_max <- as.data.frame(colnames(ret)[apply(ret,1,which.max)])
-    
-    factor_tot_max <- as.data.frame(factor_tot_max)
-    colnames(factor_tot_max) <- "HER2_subtype"
-    
-    factor_tot_max$HER2_subtype <- factor(factor_tot_max$HER2_subtype, levels = c("IM", "P/Met", "Mes/S", "LUM", "ERBB2-E"))
-    
-    ret <- cbind(ret, factor_tot_max)
-    colnames(ret) <- c("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score", "HER2_subtype")
-    ret$IM_vs_rest <- case_when(ret$HER2_subtype %in% "IM" ~ "Y",
-                                ret$HER2_subtype %!in% "IM" ~ "N")
-    ret$P_Met_vs_rest <- case_when(ret$HER2_subtype %in% "P/Met" ~ "Y",
-                                   ret$HER2_subtype %!in% "P/Met" ~ "N")
-    ret$Mes_S_vs_rest <- case_when(ret$HER2_subtype %in% "Mes/S" ~ "Y",
-                                   ret$HER2_subtype %!in% "Mes/S" ~ "N")
-    ret$LUM_vs_rest <- case_when(ret$HER2_subtype %in% "LUM" ~ "Y",
-                                 ret$HER2_subtype %!in% "LUM" ~ "N")
-    ret$ERBB2_E_vs_rest <- case_when(ret$HER2_subtype %in% "ERBB2-E" ~ "Y",
-                                     ret$HER2_subtype %!in% "ERBB2-E" ~ "N")
-    
-  return(ret);
-  }
-  
+
   s = as.character(sig[,1]);
   s[s==""] = NA;
   x = intersect(rownames(d), s);
@@ -408,9 +461,9 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
   sig = sig[match(x, s),];
   
   fCalc = function(d, x, coef) { colMeans(d[x,,drop=FALSE]*coef); }
-  
+
   val = fCalc(d, x, sig[,"coefficient"]);
   return(val)
-  
+  }
 }
 
