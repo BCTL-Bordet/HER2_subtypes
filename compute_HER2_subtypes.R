@@ -67,7 +67,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
         
         d_median <- d_median[!d_median == 0] # filter genes with median of 0
         
-        d <- d[names(d_median), ]
+        d <- d[rownames(d) %in% names(d_median), ]
         
         d <- d[intersect(rownames(d), names(median_genes)), ]
         
@@ -167,7 +167,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
         
         d_median <- d_median[!d_median == 0] # filter genes with median of 0
         
-        d <- d[names(d_median), ]
+        d <- d[rownames(d) %in% names(d_median), ]
         
         d <- d[intersect(rownames(d), names(median_genes)), ]
         
@@ -254,7 +254,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
           
           d_median <- d_median[!d_median == 0] # filter genes with median of 0
           
-          d <- d[names(d_median), ]
+          d <- d[rownames(d) %in% names(d_median), ]
           
           d <- d[intersect(rownames(d), names(median_genes)), ]
           
@@ -342,7 +342,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
       
       d_median <- d_median[!d_median == 0] # filter genes with median of 0
       
-      d <- d[names(d_median), ]
+      d <- d[rownames(d) %in% names(d_median), ]
       
       d <- d[intersect(rownames(d), names(median_genes)), ]
       
