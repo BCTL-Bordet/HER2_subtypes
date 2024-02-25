@@ -18,7 +18,7 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
                              sd_genes = readRDS("x_sd_genes.RDS"),
                              fpkm_to_tpm = TRUE # it converts FPKM to TPM if type = "FPKM"
                              ) 
-{ #if (is(d, "Matrix")) { colMeans=Matrix::colMeans; colSums=Matrix::colSums; }
+{ 
   '%!in%' <- function(x,y)!('%in%'(x,y))
   
   if(!require(dplyr)) { stop("dplyr library not installed"); }
@@ -471,4 +471,3 @@ calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbo
   return(val)
   
 }
-
