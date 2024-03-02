@@ -1,5 +1,6 @@
 # HER2_subtypes
-Script to compute HER2-positive subtypes available in "compute_HER2_subtypes.R"
+Function to compute HER2-positive subtypes available in "calc_HER2_groups_function.R"
+Script to compute HER2-positive subtypes in an example gene exmpression matrix available in 
 
 calc_HER2_groups() compute the HER2-positive breast cancer subtypes as described in PMID...
 
@@ -12,8 +13,8 @@ The output is a dataframe with the score of each subtype, the subtype as categor
 
 This classifier has not been tested with other normalization methods, as well as in datasets missing any of the genes used. Thus, while subtypes can still be identified, the accuracy in classifying samples may be reduced in these conditions.
 
-Example:
-
+Quick Example:
+# gene_matrix is a gene expression matrix with values as TPM
 df <- calc_HER2_groups(gene_matrix, type = "TPM")
 
 
