@@ -15,11 +15,11 @@ It is possible to provide a list of gene expression datasets, which will be pre-
 This classifier has not been tested with other normalization methods, as well as in datasets missing any of the genes used. Thus, while subtypes can still be identified, the accuracy in classifying samples may be reduced in these conditions.
 
 ### Dictionary:
-# "IM" = Immune-enriched         
-# "P/Met" = Proliferative/Metabolic-enriched
-# "Mes/S" = Mesenchymal/Stroma-enriched
-# "LUM" = Luminal
-# "ERBB2-E" = ERBB2-enriched
+#"IM" = Immune-enriched         
+#"P/Met" = Proliferative/Metabolic-enriched
+#"Mes/S" = Mesenchymal/Stroma-enriched
+#"LUM" = Luminal
+#"ERBB2-E" = ERBB2-enriched
 
 
 ### Example:
