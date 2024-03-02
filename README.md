@@ -23,24 +23,14 @@ This classifier has not been tested with other normalization methods, as well as
 
 
 ### Example:
-The script to run the example is stored in /scripts/compute_HER2_subtypes.R and requires the content of /scripts/calc_HER2_groups_function.R, as well as "list_examples.RDS" and "tot_number_reads.RDS".
+The script to run the example is stored in "example_compute_HER2_subtypes.R" and requires the content of "calc_HER2_groups_function.R", as well as "example_tpm_values.RDS" (the example gene expression matrix) and "HER2_subtypes_example_REF.RDS" (the expected results).
 
-The files "measures.RDS" and "df_measures.RDS" represent the expected outputs created with script_for_example.R and can be checked to verify the results obtained with the given examples.
+Total runtime for the example gene expression matrix (genes included in the classifier for 500 samples) in "example_compute_HER2_subtypes.R" on a computer with 32GB RAM, Apple M1 Max CPU is ~0.03-0.06 seconds.
 
-Total runtime for script_for_example.R on a computer with 32GB RAM, Apple M1 Max CPU is ~1.6-2 seconds.
+# Please cite our work when using this scripts and the present classification.
 
-Please cite our work when using this script.
-
-
+# Citation:
 
 
 
-The script to run the example is stored in /R/scripts and requires the content of /R/functions, "list_examples.RDS" and "tot_number_reads.RDS".
 
-The files "measures.RDS" and "df_measures.RDS" represent the expected outputs created with script_for_example.R and can be checked to verify the results obtained with the given examples.
-
-Total runtime for script_for_example.R on a computer with 32GB RAM, Apple M1 Max CPU is ~1.6-2 seconds.
-
-Please cite our work when using this script.
-
-C
