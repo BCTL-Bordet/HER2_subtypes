@@ -1,6 +1,6 @@
 ### HER2-positive breast cancer subtypes
 The function to compute HER2-positive subtypes is available in "calc_HER2_groups_function.R".
-The script to compute HER2-positive subtypes in a simulated example gene expression matrix available in "compute_HER2_subtypes.R".
+The script to compute HER2-positive subtypes in a simulated example gene expression matrix available in "example_compute_HER2_subtypes.R".
 
 # calc_HER2_groups() compute the HER2-positive breast cancer subtypes as described in PMID...
 
