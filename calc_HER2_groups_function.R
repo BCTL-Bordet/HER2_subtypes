@@ -12,6 +12,13 @@ if (!require("matrixStats", quietly = TRUE))
 library(dplyr)
 library(matrixStats)
 
+# color palette for plots
+col_HER2_subtypes <- c("IM" = "#db6d00",         
+                       "P/Met" = "#920000",
+                       "Mes/S" = "#009292",
+                       "LUM" = "#006ddb",
+                       "ERBB2-E" = "#ff6db6")
+
 
 #### FUNCTION TO COMPUTE THE HER2+ SUBTYPES
 # The OUTPUT is a dataframe with:
