@@ -1,6 +1,6 @@
 # HER2_subtypes
-Function to compute HER2-positive subtypes available in "calc_HER2_groups_function.R"
-Script to compute HER2-positive subtypes in an example gene exmpression matrix available in 
+The function to compute HER2-positive subtypes is available in "calc_HER2_groups_function.R"
+the script to compute HER2-positive subtypes in an example gene expression matrix available in 
 
 calc_HER2_groups() compute the HER2-positive breast cancer subtypes as described in PMID...
 
@@ -18,3 +18,22 @@ Quick Example:
 df <- calc_HER2_groups(gene_matrix, type = "TPM")
 
 
+
+
+Functions to compute BCR/TCR diversity measures from MiXCR outputs. The scripts have been tested on the R software (v4.0.5 and v4.2.1). The two simulated samples were used to produce Supplementary Figure 1 in Rediti M, et al. Immunological and clinicopathological features predict HER2-positive breast cancer prognosis in the neoadjuvant NeoALTTO and CALGB 40601 randomized trials. Nat Commun. 2023. doi: 10.1038/s41467-023-42635-2. PMID: 37923752.
+
+First, download the files list_examples.RDS and tot_number_reads.RDS.
+
+list_examples.RDS is a list with 2 simulated samples containing, in this case, only IG information, and it shows how MiXCR output should be formatted to run the script (explanations for the columns are available in /R/scripts/script_for_example.R)
+tot_number_reads.RDS is dataframe with the total number of reads mapping to genes for the two samples, required for the normalization of BCR/TCR number of reads
+The functions to compute BCR/TCR measures are stored in /R/functions.
+
+The script to run the example is stored in /R/scripts and requires the content of /R/functions, "list_examples.RDS" and "tot_number_reads.RDS".
+
+The files "measures.RDS" and "df_measures.RDS" represent the expected outputs created with script_for_example.R and can be checked to verify the results obtained with the given examples.
+
+Total runtime for script_for_example.R on a computer with 32GB RAM, Apple M1 Max CPU is ~1.6-2 seconds.
+
+Please cite our work when using this script.
+
+C
