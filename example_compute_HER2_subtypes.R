@@ -1,12 +1,6 @@
-# color palette
-col_HER2_subtypes <- c("IM" = "#db6d00",         
-                       "P/Met" = "#920000",
-                       "Mes/S" = "#009292",
-                       "LUM" = "#006ddb",
-                       "ERBB2-E" = "#ff6db6")
+
 
 # it requires "sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS" in your home directory
-# output is a dataframe with the score of each subtype, the subtype as category ("HER2_subtype"), and columns of each subtype vs rest to facilitate downstream analyses
 calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbols/entrezIDs, columns are samples)
                              sig = readRDS("sigs_groups_class_final.RDS"), # signature file (a list of signatures with gene symbols, entrezID and coefficients)
                              type = c("TPM", "FPKM", "microarray"), # to be specified: after ratio-based correction, if TPM/FPKM, it transforms in log2(d+1), if microarray, assumed in log scale, so first un-logged 2^d and then log2(d+1). If standardize_data = TRUE and TPM/FPKM, centering and scaling are performed using center_genes and sd_genes. If Microarray, scale() is applied with default options
