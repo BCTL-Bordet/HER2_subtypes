@@ -14,7 +14,11 @@ library(matrixStats)
 
 
 #### FUNCTION TO COMPUTE THE HER2+ SUBTYPES
-# The output is a dataframe with the sample names as row names, score as continuous values for each subtype ("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score"), the subtype as category (column "HER2_subtype", possible values: "IM", "P/Met", "Mes/S", "LUM", "ERBB2-E"), and columns of each subtype vs rest ("IM_vs_rest", "P_Met_vs_rest", "Mes_S_vs_rest", "LUM_vs_rest", "ERBB2_E_vs_rest") to facilitate downstream comparisons
+# The OUTPUT is a dataframe with:
+# - the sample names as row names 
+# - score as continuous values for each subtype ("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score")
+# - the subtype as category (column "HER2_subtype", possible values: "IM", "P/Met", "Mes/S", "LUM", "ERBB2-E")
+# - columns of each subtype vs rest ("IM_vs_rest", "P_Met_vs_rest", "Mes_S_vs_rest", "LUM_vs_rest", "ERBB2_E_vs_rest") to facilitate downstream comparisons
 
 calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbols/entrezIDs, columns are samples)
                              sig = readRDS("sigs_groups_class_final.RDS"), # signature file (a list of signatures with gene symbols, entrezID and coefficients)
