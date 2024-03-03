@@ -21,13 +21,17 @@ col_HER2_subtypes <- c("IM" = "#db6d00",
 
 
 #### FUNCTION TO COMPUTE THE HER2+ SUBTYPES
+
+# To work, calc_HER2_groups() requires "sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS" to be stored in your working directory. 
+# Otherwise, you can modify directly the path to load these files with readRDS() in the script below.
+
 # The OUTPUT is a data frame with:
 # - the sample names as row names 
 # - scores as continuous values for each subtype ("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score") in each sample
 # - the subtype as category (column "HER2_subtype", possible values: "IM", "P/Met", "Mes/S", "LUM", "ERBB2-E")
 # - columns of each subtype (as category) vs. rest ("IM_vs_rest", "P_Met_vs_rest", "Mes_S_vs_rest", "LUM_vs_rest", "ERBB2_E_vs_rest") to facilitate downstream comparisons
 
-calc_HER2_groups <- function(d,  # d = gene expression data (rows are gene symbols/entrezIDs, columns are samples)
+calc_HER2_groups <- function(d,  # TO BE SPECIFIED: d = gene expression data (rows are gene symbols/entrezIDs, columns are samples)
                              sig = readRDS("sigs_groups_class_final.RDS"), # signature file (a list of signatures with gene symbols, entrezID and coefficients)
                              type = c("TPM", "FPKM", "microarray"), # TO BE SPECIFIED: after ratio-based correction, if TPM/FPKM, it transforms in log2(d+1), if microarray, assumed in log scale, so first un-logged 2^d and then log2(d+1). If standardize_data = TRUE and TPM/FPKM, centering and scaling are performed using center_genes and sd_genes. If Microarray, scale() is applied with default options
                              is_list_gene_exp = FALSE, # if TRUE, it allows to apply the same median ratio procedure to a list of gene expression matrices (TPM/FPKM) independently, which are then merged at the end before standardization
