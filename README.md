@@ -1,4 +1,4 @@
-### HER2-positive breast cancer subtypes
+## HER2-positive breast cancer subtypes
 This repository contains functions and inputs required to compute HER2-positive subtypes from gene expression data as defined by Rediti M. et al. in PMID...
 The R function to compute HER2-positive subtypes is available in "calc_HER2_groups_function.R".
 The R script to compute HER2-positive subtypes in a simulated example gene expression matrix available in "example_compute_HER2_subtypes.R".
@@ -25,12 +25,12 @@ This classifier has not been tested with other normalization methods, as well as
 - "ERBB2-E" = ERBB2-enriched  
 
 
-### Example:
-The script to run the example is stored in "example_compute_HER2_subtypes.R" and requires the content of "calc_HER2_groups_function.R", as well as "example_tpm_values.RDS" (the example gene expression matrix) and "HER2_subtypes_example_REF.RDS" (the expected results).
+### How to run the example:
+The script to run the example is stored in "example_compute_HER2_subtypes.R" (details in the R script) and requires the content of "calc_HER2_groups_function.R", as well as "example_tpm_values.RDS" (an example gene expression matrix for testing, with hypothetical TPM-normalized gene expression data) and "HER2_subtypes_example_REF.RDS" (the expected results from the example).
 
 Total runtime for the example gene expression matrix (genes included in the classifier for 500 samples) in "example_compute_HER2_subtypes.R" on a computer with 32GB RAM, Apple M1 Max CPU is ~0.03-0.06 seconds.
 
-### Please cite our work when using this scripts and the present classification.
+## Please cite our work when using these scripts and the present classification.
 
 ### Citation:
 
