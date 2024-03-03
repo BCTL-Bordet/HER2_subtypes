@@ -30,7 +30,7 @@ if (!require("matrixStats", quietly = TRUE))
   install.packages("matrixStats")
 
 
-### LOAD THE EXAMPLE MATRIX INCLUDING THE GENES IN THE CLASSIFIER (SIMULATED TPM VALUES) and 500 SAMPLES
+### LOAD THE EXAMPLE MATRIX INCLUDING THE GENES IN THE CLASSIFIER (SIMULATED TPM VALUES) and 500 SAMPLES, from you working directory
 example_tpm_values <- readRDS(paste0(getwd(), "/example_tpm_values.RDS"))
 
 
@@ -52,7 +52,7 @@ table(HER2_subtypes_example$HER2_subtype)
 
 ### compare output
 
-## load the REFERENCE file to compare results
+## load the REFERENCE file to compare results, from your working directory
 HER2_subtypes_example_REF <- readRDS(paste0(getwd(), "/HER2_subtypes_example_REF.RDS"))
 
 
