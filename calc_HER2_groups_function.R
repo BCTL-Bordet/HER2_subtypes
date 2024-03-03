@@ -23,7 +23,7 @@ col_HER2_subtypes <- c("IM" = "#db6d00",
 #### FUNCTION TO COMPUTE THE HER2+ SUBTYPES
 # The OUTPUT is a data frame with:
 # - the sample names as row names 
-# - score as continuous values for each subtype ("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score") in each sample
+# - scores as continuous values for each subtype ("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score") in each sample
 # - the subtype as category (column "HER2_subtype", possible values: "IM", "P/Met", "Mes/S", "LUM", "ERBB2-E")
 # - columns of each subtype (as category) vs. rest ("IM_vs_rest", "P_Met_vs_rest", "Mes_S_vs_rest", "LUM_vs_rest", "ERBB2_E_vs_rest") to facilitate downstream comparisons
 
