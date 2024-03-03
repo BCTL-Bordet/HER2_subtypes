@@ -30,9 +30,9 @@ The script to run the example is stored in "example_compute_HER2_subtypes.R" and
 
 Total runtime for the example gene expression matrix (genes included in the classifier for 500 samples) in "example_compute_HER2_subtypes.R" on a computer with 32GB RAM, Apple M1 Max CPU is ~0.03-0.06 seconds.
 
-# Please cite our work when using this scripts and the present classification.
+### Please cite our work when using this scripts and the present classification.
 
-# Citation:
+### Citation:
 
 
 
