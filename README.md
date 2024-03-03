@@ -12,7 +12,7 @@ The scripts have been tested on the R software (v4.2.1).
 - Input is a gene expression matrix (gene symbols/entrezIDs as row names, sample IDs as column names), either RNA-seq TPM or FPKM normalized (not log-transformed) data, or microarray data already normalized (log2 transformed). 
 It is possible to provide a list of gene expression datasets, which will be pre-processed separately with "median_rescale", then merged and further pre-processed with "standardize_data".
 - The RDS files required (to be located in the home directory) are listed in the script and are available in this repository ("sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS").
-- The output is a dataframe with the score of each subtype, the subtype as category, and columns of each subtype vs rest to facilitate downstream analyses.
+- The output is a data frame with the sample names as row names, signature score for all subtype in each sample, the subtypes as category assigned to each sample, and columns of each subtype (as category) vs. rest to facilitate downstream analyses.
 
 This classifier has not been tested with other normalization methods, as well as in datasets missing any of the genes used. Thus, while subtypes can still be identified, the accuracy in classifying samples may be reduced in these conditions.
 
