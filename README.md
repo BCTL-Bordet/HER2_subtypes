@@ -3,7 +3,7 @@ This repository contains functions and inputs required to compute HER2-positive 
 The R function to compute HER2-positive subtypes is available in "calc_HER2_groups_function.R".
 The R script to compute HER2-positive subtypes in a simulated example gene expression matrix available in "example_compute_HER2_subtypes.R".
 
-calc_HER2_groups() compute the HER2-positive breast cancer subtypes
+calc_HER2_groups() is the R function to compute the HER2-positive breast cancer subtypes, and requires the RDS objects "sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS".
 
 The scripts have been tested on the R software (v4.2.1).
 
