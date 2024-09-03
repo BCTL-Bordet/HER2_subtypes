@@ -17,7 +17,7 @@ col_HER2_subtypes <- c("IM" = "#db6d00",
                        "P/Met" = "#920000",
                        "Mes/S" = "#009292",
                        "LUM" = "#006ddb",
-                       "ERBB2-E" = "#ff6db6")
+                       "ERBB2-D" = "#ff6db6")
 
 
 #### FUNCTION TO COMPUTE THE HER2+ SUBTYPES
@@ -27,9 +27,9 @@ col_HER2_subtypes <- c("IM" = "#db6d00",
 
 # The OUTPUT is a data frame with:
 # - the sample names as row names 
-# - scores as continuous values for each subtype ("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score") in each sample
-# - the subtype as category (column "HER2_subtype", possible values: "IM", "P/Met", "Mes/S", "LUM", "ERBB2-E")
-# - columns of each subtype (as category) vs. rest ("IM_vs_rest", "P_Met_vs_rest", "Mes_S_vs_rest", "LUM_vs_rest", "ERBB2_E_vs_rest") to facilitate downstream comparisons
+# - scores as continuous values for each subtype ("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_D_score") in each sample
+# - the subtype as category (column "HER2_subtype", possible values: "IM", "P/Met", "Mes/S", "LUM", "ERBB2-D")
+# - columns of each subtype (as category) vs. rest ("IM_vs_rest", "P_Met_vs_rest", "Mes_S_vs_rest", "LUM_vs_rest", "ERBB2_D_vs_rest") to facilitate downstream comparisons
 
 calc_HER2_groups <- function(d,  # TO BE SPECIFIED: d = gene expression data (rows are gene symbols/entrezIDs, columns are samples)
                              sig = readRDS("sigs_groups_class_final.RDS"), # signature file (a list of signatures with gene symbols, entrezID and coefficients)
@@ -64,10 +64,10 @@ calc_HER2_groups <- function(d,  # TO BE SPECIFIED: d = gene expression data (ro
   factor_tot_max <- as.data.frame(factor_tot_max)
   colnames(factor_tot_max) <- "HER2_subtype"
   
-  factor_tot_max$HER2_subtype <- factor(factor_tot_max$HER2_subtype, levels = c("IM", "P/Met", "Mes/S", "LUM", "ERBB2-E"))
+  factor_tot_max$HER2_subtype <- factor(factor_tot_max$HER2_subtype, levels = c("IM", "P/Met", "Mes/S", "LUM", "ERBB2-D"))
   
   ret <- cbind(ret, factor_tot_max)
-  colnames(ret) <- c("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_E_score", "HER2_subtype")
+  colnames(ret) <- c("IM_score", "P_Met_score", "Mes_S_score", "LUM_score", "ERBB2_D_score", "HER2_subtype")
   ret$IM_vs_rest <- case_when(ret$HER2_subtype %in% "IM" ~ "Y",
                               ret$HER2_subtype %!in% "IM" ~ "N")
   ret$P_Met_vs_rest <- case_when(ret$HER2_subtype %in% "P/Met" ~ "Y",
@@ -76,8 +76,8 @@ calc_HER2_groups <- function(d,  # TO BE SPECIFIED: d = gene expression data (ro
                                  ret$HER2_subtype %!in% "Mes/S" ~ "N")
   ret$LUM_vs_rest <- case_when(ret$HER2_subtype %in% "LUM" ~ "Y",
                                ret$HER2_subtype %!in% "LUM" ~ "N")
-  ret$ERBB2_E_vs_rest <- case_when(ret$HER2_subtype %in% "ERBB2-E" ~ "Y",
-                                   ret$HER2_subtype %!in% "ERBB2-E" ~ "N")
+  ret$ERBB2_D_vs_rest <- case_when(ret$HER2_subtype %in% "ERBB2-D" ~ "Y",
+                                   ret$HER2_subtype %!in% "ERBB2-D" ~ "N")
   
   return(ret);
   }
