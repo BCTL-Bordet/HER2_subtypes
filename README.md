@@ -22,7 +22,7 @@ This classifier has not been tested with other normalization methods, as well as
 - "P/Met" = Proliferative/Metabolic-enriched  
 - "Mes/S" = Mesenchymal/Stroma-enriched  
 - "LUM" = Luminal  
-- "ERBB2-E" = ERBB2-enriched  
+- "ERBB2-D" = ERBB2-dependent  
 
 
 ### How to run the example:
