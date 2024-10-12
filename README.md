@@ -1,6 +1,6 @@
 # HER2-positive breast cancer subtypes
 This repository contains functions and inputs required to compute HER2-positive subtypes from gene expression data as defined by Rediti M. _et al_. in "Identification of HER2-positive breast cancer molecular subtypes with potential clinical implications in the ALTTO clinical trial", PMID...  
-**Please note that our classification was developed and applied in HER2-positive breast cancer as defined by immunohistochemistry (IHC) and fluorescence in situ hybridization (FISH), including both hormone receptor positive and negative tumors. Therefore, please select cohorts of HER2-positive breast cancer according to IHC and ISH criteria before computing the molecular subtypes with our classifier.**
+**Please note that our molecular classification was developed, applied and tested in HER2-positive breast cancer as defined by immunohistochemistry and fluorescence in situ hybridization criteria, including both hormone receptor positive and negative tumors. Therefore, please select cohorts of HER2-positive breast cancer according to such criteria before computing the molecular subtypes with our classifier.**
 
 The R function to compute HER2-positive subtypes is available in "**calc_HER2_groups_function.R**".  
 The R script to compute HER2-positive subtypes in a simulated example gene expression matrix available in "example_files/example_compute_HER2_subtypes.R".
