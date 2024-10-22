@@ -1,4 +1,4 @@
-# HER2-positive breast cancer subtypes
+# HER2-positive breast cancer molecular subtypes
 This repository contains functions and inputs required to compute HER2-positive molecular subtypes from gene expression data as defined by Rediti M. _et al_. in "Identification of HER2-positive breast cancer molecular subtypes with potential clinical implications in the ALTTO clinical trial", PMID...  
 **Please note that our molecular classification was developed, applied and tested in HER2-positive breast cancer as defined by immunohistochemistry and fluorescence in situ hybridization criteria, including both hormone receptor-positive and negative tumors. Therefore, please select cohorts of HER2-positive breast cancer according to such criteria before computing the molecular subtypes with our classifier.**
 
