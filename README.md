@@ -36,6 +36,9 @@ Total runtime for the example gene expression matrix (87 genes included in the c
 
 ### Citation:
 
+### Further information
+Created by Mattia Rediti (MD, PhD) at the Institut Jules Bordet, ULB, in collaboration with David Venet (PhD) and under the supervision of Christos Sotiriou (MD, PhD).
+
 
 
 
