@@ -15,6 +15,7 @@ The scripts have been tested on the R software (v4.2.1).
 It is possible to provide a list of gene expression datasets, which will be pre-processed separately with "median_rescale", then merged and further pre-processed with "standardize_data".
 - The **RDS files** required (to be located in your working directory, or with _path/to/file/_ to be specified directly within calc_HER2_groups()) are listed in the script and are available in this repository in the directory "**input_files/**" ("sigs_groups_class_final.RDS", "median_genes.RDS", "x_mean_genes.RDS", "x_sd_genes.RDS"). They can also be saved as variables in your environment and called replacing the .RDS files in calc_HER2_groups().
 - With the RDS files in your working directory, you can run the function on TPM gene expression data simply with:
+  
   **subtypes_df <- calc_HER2_groups(your_TPM_matrix, type = "TPM")**
 - The **output** is a data frame with the sample names as row names, scores for all subtype in each sample (signatures computed as weighted mean of the genes, using the coefficients derived from the LASSO classifier as weights, and after pre-processing as described in the publication and in the R scripts), the subtype as category assigned to each sample (based on the highest score), and columns of each subtype (as category) vs. rest to facilitate downstream analyses.
 
