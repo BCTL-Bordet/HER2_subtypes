@@ -38,6 +38,7 @@ Total runtime for the example gene expression matrix (87 genes included in the c
 ## Please cite our work when using the present classification and these scripts.
 
 ### Citation:
+https://pubmed.ncbi.nlm.nih.gov/39613746/
 
 ### Further information
 The molecular classification and the classifier were created by Mattia Rediti (MD, PhD) at the Breast Cancer Translational research Laboratory (BCTL), Institut Jules Bordet, ULB, in collaboration with David Venet (PhD) and under the supervision of Christos Sotiriou (MD, PhD).
